@@ -13,11 +13,8 @@ PATH_DATA = os.path.join(PATH_ROOT, 'data')
 
 # dataset
 PATH_DATA_DET = os.path.join(PATH_DATA, 'det')
-PATH_DATA_DET_IMG = os.path.join(PATH_DATA_DET, 'img')
 PATH_DATA_RECOG = os.path.join(PATH_DATA, 'recog')
-PATH_DATA_RECOG_IMG = os.path.join(PATH_DATA_RECOG, 'img')
+PATH_DATA_RECOG_IMG = os.path.join(PATH_DATA_RECOG, 'image')
 
-if not os.path.exists(PATH_DATA_DET_IMG):
-    os.makedirs(PATH_DATA_DET_IMG)
 if not os.path.exists(PATH_DATA_RECOG_IMG):
     os.makedirs(PATH_DATA_RECOG_IMG)
