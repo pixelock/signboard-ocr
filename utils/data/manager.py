@@ -17,7 +17,8 @@ from utils.bbox import minimal_rectangle
 
 
 class DataManager(object):
-    def __init__(self, is_detection, is_recognition, is_scatter):
+    def __init__(self, name, is_detection, is_recognition, is_scatter):
+        self.dataset_name = name
         self.is_detection = is_detection
         self.is_recognition = is_recognition
         self.is_scatter = is_scatter
@@ -67,11 +68,28 @@ class DataManager(object):
                 cropped_path = os.path.join(output_dir, name)
                 cv2.imwrite(cropped_path, cropped_image, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
 
-    def generate_cropped_image_name(self, prefix, index, image_name=None, box_info=None):
-        raise NotImplementedError
-
     def get_recognition_gts(self):
-        raise NotImplementedError
+        ground_truths = dict()
+
+        for image_path, gt in tqdm(self.det_gts.items()):
+            image_name = os.path.splitext(os.path.split(image_path)[1])[0]
+            available_boxes = dict()
+
+            for index, box in enumerate(gt):
+                text = box['transcription']
+                points = box['points']
+                cropped_name = self.generate_cropped_image_name(self.dataset_name, index, image_name)
+                available_boxes[cropped_name] = {
+                    'transcription': text,
+                    'points': points
+                }
+
+            ground_truths[image_path] = available_boxes
+
+        return ground_truths
+
+    def generate_cropped_image_name(self, prefix, index, image_name=None, box_info=None):
+        return '{}_{}_{}.jpg'.format(prefix, image_name, index)
 
     def recognition_output_paddle(self, output_dir):
         gts = self.rec_gts or self.get_recognition_gts()
@@ -86,6 +104,10 @@ class DataManager(object):
         with open(output_dir, 'w', encoding='utf-8') as f:
             f.write('\n'.join(lines))
 
+    @staticmethod
+    def convert_points_format(p):
+        return [[p[0], p[1]], [p[2], p[3]], [p[4], p[5]], [p[6], p[7]]]
+
 
 class ReCTSManager(DataManager):
     NUM_SAMPLES = 20000
@@ -94,6 +116,7 @@ class ReCTSManager(DataManager):
 
     def __init__(self, path, level='lines'):
         super(ReCTSManager, self).__init__(
+            name='rects',
             is_detection=True,
             is_recognition=True,
             is_scatter=True,
@@ -109,7 +132,7 @@ class ReCTSManager(DataManager):
     def get_detection_gts(self):
         ground_truths = dict()
         for i in tqdm(range(1, self.NUM_SAMPLES + 1)):
-            image_path = os.path.join(self.img_path, self.P_IMAGE.format(i))
+            image_path = os.path.abspath(os.path.join(self.img_path, self.P_IMAGE.format(i)))
             gt_path = os.path.join(self.gt_path, self.P_GT.format(i))
 
             with open(gt_path, 'r', encoding='utf-8') as f:
@@ -120,7 +143,7 @@ class ReCTSManager(DataManager):
             for index, box in enumerate(boxes):
                 if box['ignore'] == 0:
                     text = box['transcription']
-                    points = self.get_points(box['points'])
+                    points = self.convert_points_format(box['points'])
                     available_boxes.append({
                         'transcription': text,
                         'points': points
@@ -128,38 +151,11 @@ class ReCTSManager(DataManager):
             ground_truths[image_path] = available_boxes
         return ground_truths
 
-    def get_recognition_gts(self):
-        ground_truths = dict()
-
-        for image_path, gt in tqdm(self.det_gts.items()):
-            image_name = os.path.splitext(os.path.split(image_path)[1])[0]
-            available_boxes = dict()
-
-            for index, box in enumerate(gt):
-                text = box['transcription']
-                points = box['points']
-                cropped_name = self.generate_cropped_image_name('rects', index, image_name)
-                available_boxes[cropped_name] = {
-                    'transcription': text,
-                    'points': points
-                }
-
-            ground_truths[image_path] = available_boxes
-
-        return ground_truths
-
-    def generate_cropped_image_name(self, prefix, index, image_name=None, box_info=None):
-        real_name = os.path.splitext(image_name)[0]
-        return '{}_{}_{}.jpg'.format(prefix, real_name, index)
-
-    @staticmethod
-    def get_points(p):
-        return [[p[0], p[1]], [p[2], p[3]], [p[4], p[5]], [p[6], p[7]]]
-
 
 class LSVTManager(DataManager):
     def __init__(self, path):
         super(LSVTManager, self).__init__(
+            name='lsvt',
             is_detection=True,
             is_recognition=True,
             is_scatter=False,
@@ -193,30 +189,6 @@ class LSVTManager(DataManager):
             ground_truths[image_path] = available_boxes
 
         return ground_truths
-
-    def get_recognition_gts(self):
-        ground_truths = dict()
-
-        for name, _ in tqdm(self.raw_gt.items()):
-            image_path = os.path.abspath(os.path.join(self.image_dir, '{}.jpg'.format(name)))
-
-            available_boxes = dict()
-            gt = self.det_gts[image_path]
-            for index, box in enumerate(gt):
-                text = box['transcription']
-                points = box['points']
-                cropped_name = self.generate_cropped_image_name('lsvt', index, name)
-                available_boxes[cropped_name] = {
-                    'transcription': text,
-                    'points': points,
-                }
-
-            ground_truths[image_path] = available_boxes
-
-        return ground_truths
-
-    def generate_cropped_image_name(self, prefix, index, image_name=None, box_info=None):
-        return '{}_{}_{}.jpg'.format(prefix, image_name, index)
 
 
 class ShopSignManager(DataManager):
@@ -262,7 +234,7 @@ class ShopSignManager(DataManager):
                     unrecognizable = True
                     text = text.replace('###', '').strip()
 
-                points = self.get_points([int(p) for p in segs[:8]])
+                points = self.convert_points_format([int(p) for p in segs[:8]])
                 available_boxes.append({
                     'transcription': text,
                     'points': points,
@@ -273,34 +245,65 @@ class ShopSignManager(DataManager):
 
         return ground_truths
 
-    def get_recognition_gts(self):
+
+class BDCIPOIManager(DataManager):
+    def __init__(self, path):
+        super(BDCIPOIManager, self).__init__(
+            is_detection=True,
+            is_recognition=True,
+            is_scatter=False,
+        )
+
+        self.root_path = path
+        self.image_path_train = os.path.join(self.root_path, 'train_images')
+        self.image_path_test_a = os.path.join(self.root_path, 'testA_images')
+        self.image_path_test_b = os.path.join(self.root_path, 'testB_images')
+
+        with open(os.path.join(self.root_path, 'public_train_label.json'), 'r', encoding='utf-8') as f:
+            self.train_gts = json.load(f)['data']
+        with open(os.path.join(self.root_path, 'public_test_A.json'), 'r', encoding='utf-8') as f:
+            self.test_a_gts = json.load(f)['data']
+        with open(os.path.join(self.root_path, 'public_test_B.json'), 'r', encoding='utf-8') as f:
+            self.test_b_gts = json.load(f)['data']
+
+        self.initialize()
+
+    def get_detection_gts(self):
         ground_truths = dict()
 
-        for image_path, gt in tqdm(self.det_gts.items()):
-            image_name = os.path.splitext(os.path.split(image_path)[1])[0]
-            available_boxes = dict()
+        all_gts = dict()
+        for _, value in self.train_gts.items():
+            image_id = value['image_id']
+            image_name = '{}.jpg'.format(image_id)
+            image_path = os.path.join(self.image_path_train, image_name)
+            all_gts[image_path] = value['texts']
+        for _, value in self.test_a_gts.items():
+            image_id = value['image_id']
+            image_name = '{}.jpg'.format(image_id)
+            image_path = os.path.join(self.image_path_test_a, image_name)
+            all_gts[image_path] = value['texts']
+        for _, value in self.test_b_gts.items():
+            image_id = value['image_id']
+            image_name = '{}.jpg'.format(image_id)
+            image_path = os.path.join(self.image_path_test_b, image_name)
+            all_gts[image_path] = value['texts']
 
-            for index, box in enumerate(gt):
-                text = box['transcription']
-                points = box['points']
-                cropped_name = self.generate_cropped_image_name('shopsign', index, image_name)
-                available_boxes[cropped_name] = {
+        for path, gts in tqdm(all_gts.items()):
+            image_path = os.path.abspath(path)
+            available_boxes = []
+            for box in gts:
+                text = box['text']
+                contour = box['contour']
+                points = minimal_rectangle(contour, ordered=True).tolist()
+                available_boxes.append({
                     'transcription': text,
-                    'points': points
-                }
+                    'points': points,
+                })
 
             ground_truths[image_path] = available_boxes
 
         return ground_truths
 
-    def generate_cropped_image_name(self, prefix, index, image_name=None, box_info=None):
-        real_name = os.path.splitext(image_name)[0]
-        return '{}_{}_{}.jpg'.format(prefix, real_name, index)
-
-    @staticmethod
-    def get_points(p):
-        return [[p[0], p[1]], [p[2], p[3]], [p[4], p[5]], [p[6], p[7]]]
-
 
 if __name__ == '__main__':
-    manager = ShopSignManager('../../data/ShopSign')
+    manager = LSVTManager('../../data/ICDAR-2019-LSVT')
