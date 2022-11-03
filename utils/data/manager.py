@@ -10,6 +10,7 @@ import os
 import cv2
 import json
 import numpy as np
+import collections
 from tqdm import tqdm
 
 from utils.image import get_rotate_crop_image
@@ -194,6 +195,7 @@ class LSVTManager(DataManager):
 class ShopSignManager(DataManager):
     def __init__(self, path):
         super(ShopSignManager, self).__init__(
+            name='shopsign',
             is_detection=True,
             is_recognition=True,
             is_scatter=True,
@@ -213,7 +215,7 @@ class ShopSignManager(DataManager):
             index = os.path.splitext(name)[0].replace('image_', '')
             if int(index) >= 21000:
                 gt_name = os.path.join(self.anno_path, 'gt_img_{}.txt'.format(index))
-                with open(gt_name, 'r', encoding='ANSI') as f:
+                with open(gt_name, 'r', encoding='gbk') as f:
                     lines = [t.strip()for t in f.read().split('\n') if t.strip()]
             else:
                 gt_name = os.path.join(self.anno_path, 'image_{}.txt'.format(index))
@@ -249,6 +251,7 @@ class ShopSignManager(DataManager):
 class BDCIPOIManager(DataManager):
     def __init__(self, path):
         super(BDCIPOIManager, self).__init__(
+            name='bdci_poi',
             is_detection=True,
             is_recognition=True,
             is_scatter=False,
@@ -305,5 +308,107 @@ class BDCIPOIManager(DataManager):
         return ground_truths
 
 
+class CTWManager(DataManager):
+    def __init__(self, path):
+        super(CTWManager, self).__init__(
+            name='ctw',
+            is_detection=True,
+            is_recognition=True,
+            is_scatter=False,
+        )
+
+        self.root_path = os.path.abspath(path)
+        self.image_train_path = os.path.join(self.root_path, 'images-train')
+        self.image_test_path = os.path.join(self.root_path, 'images-test')
+        self.label_train_path = os.path.join(self.root_path, 'train.jsonl')
+        self.label_val_path = os.path.join(self.root_path, 'val.jsonl')
+        self.label_test_path = os.path.join(self.root_path, 'test_cls.jsonl')
+
+        self.train_gts = []
+        self.val_gts = []
+        self.test_gts = []
+
+        with open(self.label_train_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                self.train_gts.append(json.loads(line))
+        with open(self.label_val_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                self.val_gts.append(json.loads(line))
+        with open(self.label_test_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                self.test_gts.append(json.loads(line))
+
+        self.initialize()
+
+    @staticmethod
+    def poly2bbox(poly):
+        key_points = list()
+        rotated = collections.deque(poly)
+        rotated.rotate(1)
+        for (x0, y0), (x1, y1) in zip(poly, rotated):
+            for ratio in (1 / 3, 2 / 3):
+                key_points.append((x0 * ratio + x1 * (1 - ratio), y0 * ratio + y1 * (1 - ratio)))
+        x, y = zip(*key_points)
+        adjusted_bbox = (min(x), min(y), max(x) - min(x), max(y) - min(y))
+        return key_points, adjusted_bbox
+
+    def get_detection_gts(self):
+        ground_truths = dict()
+
+        total_train_gts = self.train_gts + self.val_gts
+        for gt in tqdm(total_train_gts):
+            image_id = gt['image_id']
+            image_name = gt['file_name']
+            image_path = os.path.join(self.image_train_path, image_name)
+
+            annotations = gt['annotations']
+            ignores = gt['ignore']
+
+            for sentence in annotations:
+                sentence_chars = []
+                polygons = []
+                for char in sentence:
+                    text = char['text']
+                    polygon = char['polygon']
+                    sentence_chars.append(text)
+                    polygons.extend(polygon)
+
+                key_points, adjusted_bbox = self.poly2bbox(polygons)
+                a = 1
+
+        return ground_truths
+
+
+class BaiduCHSTRManager(DataManager):
+    def __init__(self, path):
+        super(BaiduCHSTRManager, self).__init__(
+            name='baidu_ch_str',
+            is_detection=False,
+            is_recognition=True,
+            is_scatter=False,
+        )
+
+        self.root_path = path
+        self.image_train_path = os.path.join(self.root_path, 'train_images')
+
+        with open(os.path.join(self.root_path, 'train.list'), 'r', encoding='utf-8') as f:
+            self.lines = f.read().split('\n')
+
+        self.initialize()
+
+    def get_recognition_gts(self):
+        ground_truths = dict()
+
+        for line in tqdm(self.lines):
+            width, height, image_name, text = line.split('\t')
+            width, height = int(width), int(height)
+
+            image_path = os.path.abspath(os.path.join(self.image_train_path, image_name))
+
+            ground_truths[image_path] = text
+
+        return ground_truths
+
+
 if __name__ == '__main__':
-    manager = LSVTManager('../../data/ICDAR-2019-LSVT')
+    manager = CTWManager('../../data/CTW')
