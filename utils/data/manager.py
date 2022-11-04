@@ -92,13 +92,13 @@ class DataManager(object):
     def generate_cropped_image_name(self, prefix, index, image_name=None, box_info=None):
         return '{}_{}_{}.jpg'.format(prefix, image_name, index)
 
-    def recognition_output_paddle(self, output_dir):
+    def recognition_output_paddle(self, output_dir, image_dir):
         gts = self.rec_gts or self.get_recognition_gts()
         lines = []
         for path, boxes in tqdm(gts.items()):
             for name, box in boxes.items():
                 text = box['transcription']
-                cropped_path = os.path.join(output_dir, name)
+                cropped_path = os.path.join(image_dir, name)
                 line = '{}\t{}'.format(cropped_path, text)
                 lines.append(line)
 

@@ -28,5 +28,5 @@ args = parser.parse_args()
 if __name__ == '__main__':
     manager = ShopSignManager(path=args.dataset_dir)
     manager.detection_output_paddle(output_dir=os.path.join(args.det_dir, args.det_name))
-    manager.recognition_output_paddle(output_dir=os.path.join(args.reg_dir, args.reg_name))
+    manager.recognition_output_paddle(output_dir=os.path.join(args.reg_dir, args.reg_name), image_dir=args.reg_img_dir)
     manager.save_cropped_image(output_dir=args.reg_img_dir, v2h=args.no_rotate, v2h_threshold=args.v2h_threshold)
