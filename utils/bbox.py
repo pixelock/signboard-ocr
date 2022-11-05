@@ -20,7 +20,7 @@ class BboxFormat(IntEnum):
 
 
 def minimal_rectangle(contours, ordered=True):
-    contours = np.array(contours)
+    contours = np.array(contours).astype('float32')
     min_rect = cv2.minAreaRect(contours)
     box_points = np.int0(cv2.boxPoints(min_rect))
 

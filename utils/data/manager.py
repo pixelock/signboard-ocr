@@ -14,7 +14,7 @@ import collections
 from tqdm import tqdm
 
 from utils.image import get_rotate_crop_image
-from utils.bbox import minimal_rectangle
+from utils.bbox import minimal_rectangle, trans_xywh2corners, trans_integer
 
 
 class DataManager(object):
@@ -357,13 +357,14 @@ class CTWManager(DataManager):
 
         total_train_gts = self.train_gts + self.val_gts
         for gt in tqdm(total_train_gts):
+            width, height = gt['width'], gt['height']
             image_id = gt['image_id']
             image_name = gt['file_name']
             image_path = os.path.join(self.image_train_path, image_name)
 
-            annotations = gt['annotations']
-            ignores = gt['ignore']
+            available_boxes = []
 
+            annotations = gt['annotations']
             for sentence in annotations:
                 sentence_chars = []
                 polygons = []
@@ -373,8 +374,46 @@ class CTWManager(DataManager):
                     sentence_chars.append(text)
                     polygons.extend(polygon)
 
-                key_points, adjusted_bbox = self.poly2bbox(polygons)
-                a = 1
+                points = minimal_rectangle(polygons, ordered=True).tolist()
+                # key_points, adjusted_bbox = self.poly2bbox(polygons)
+                # points = trans_xywh2corners(adjusted_bbox)
+                available_boxes.append({
+                    'points': points,
+                    'transcription': ''.join(sentence_chars),
+                    'ignore': False,
+                })
+
+            ignores = gt['ignore']
+            for box in ignores:
+                points = trans_integer(box['polygon'], width=width, height=height)
+                available_boxes.append({
+                    'points': points,
+                    'transcription': '',
+                    'ignore': True,
+                })
+
+            ground_truths[image_path] = available_boxes
+
+        return ground_truths
+
+    def get_recognition_gts(self):
+        ground_truths = dict()
+
+        for image_path, gt in tqdm(self.det_gts.items()):
+            image_name = os.path.splitext(os.path.split(image_path)[1])[0]
+            available_boxes = dict()
+
+            for index, box in enumerate(gt):
+                if not box['ignore']:
+                    text = box['transcription']
+                    points = box['points']
+                    cropped_name = self.generate_cropped_image_name(self.dataset_name, index, image_name)
+                    available_boxes[cropped_name] = {
+                        'transcription': text,
+                        'points': points,
+                    }
+
+            ground_truths[image_path] = available_boxes
 
         return ground_truths
 
