@@ -1,36 +1,34 @@
 Global:
   debug: false
   use_gpu: true
-  epoch_num: 500
+  epoch_num: 1000
   log_smooth_window: 20
   print_batch_step: 10
-  save_model_dir: ./output/det/ppocr/student/data1
-  save_epoch_step: 100
+  save_model_dir: ./output/det/db++/data1
+  save_epoch_step: 200
   eval_batch_step:
   - 0
   - 9486
   cal_metric_during_train: false
-  pretrained_model: null
+  pretrained_model:
   checkpoints: null
   save_inference_dir: null
   use_visualdl: false
   infer_img:
-  save_res_path: ./output/det/ppocr/student/data1/predicts.txt
-  distributed: true
+  save_res_path: ./output/det/db++/data1/predicts.txt
 
 Architecture:
   model_type: det
-  algorithm: DB
-  Transform:
+  algorithm: DB++
+  Transform: null
   Backbone:
-    name: MobileNetV3
-    scale: 0.5
-    model_name: large
-    disable_se: True
+    name: ResNet
+    layers: 50
+    dcn_stage: [False, True, True, True]
   Neck:
-    name: RSEFPN
-    out_channels: 96
-    shortcut: True
+    name: DBFPN
+    out_channels: 256
+    use_asf: True
   Head:
     name: DBHead
     k: 50
@@ -38,22 +36,21 @@ Architecture:
 Loss:
   name: DBLoss
   balance_loss: true
-  main_loss_type: DiceLoss
+  main_loss_type: BCELoss
   alpha: 5
   beta: 10
   ohem_ratio: 3
 
 Optimizer:
-  name: Adam
-  beta1: 0.9
-  beta2: 0.999
+  name: Momentum
+  momentum: 0.9
   lr:
-    name: Cosine
+    name: DecayLearningRate
     learning_rate: 0.0001
-    warmup_epoch: 2
-  regularizer:
-    name: L2
-    factor: 0
+    epochs: 1000
+    factor: 0.9
+    end_lr: 0
+  weight_decay: 0.0001
 
 PostProcess:
   name: DBPostProcess
@@ -100,27 +97,27 @@ Train:
             - 3
     - EastRandomCropData:
         size:
-        - 960
-        - 960
-        max_tries: 50
+        - 640
+        - 640
+        max_tries: 10
         keep_ratio: true
+    - MakeShrinkMap:
+        shrink_ratio: 0.4
+        min_text_size: 8
     - MakeBorderMap:
         shrink_ratio: 0.4
         thresh_min: 0.3
         thresh_max: 0.7
-    - MakeShrinkMap:
-        shrink_ratio: 0.4
-        min_text_size: 8
     - NormalizeImage:
         scale: 1./255.
         mean:
-        - 0.485
-        - 0.456
-        - 0.406
+        - 0.48109378172549
+        - 0.45752457890196
+        - 0.40787054090196
         std:
-        - 0.229
-        - 0.224
-        - 0.225
+        - 1.0
+        - 1.0
+        - 1.0
         order: hwc
     - ToCHWImage: null
     - KeepKeys:
@@ -133,15 +130,15 @@ Train:
   loader:
     shuffle: true
     drop_last: false
-    batch_size_per_card: 8
-    num_workers: 4
+    batch_size_per_card: 4
+    num_workers: 8
 
 Eval:
   dataset:
     name: SimpleDataSet
     data_dir: data/
     label_file_list:
-      - ./data/det/shopsign.txt
+    - ./data/det/shopsign.txt
     transforms:
     - DecodeImage:
         img_mode: BGR
@@ -153,13 +150,13 @@ Eval:
     - NormalizeImage:
         scale: 1./255.
         mean:
-        - 0.485
-        - 0.456
-        - 0.406
+        - 0.48109378172549
+        - 0.45752457890196
+        - 0.40787054090196
         std:
-        - 0.229
-        - 0.224
-        - 0.225
+        - 1.0
+        - 1.0
+        - 1.0
         order: hwc
     - ToCHWImage: null
     - KeepKeys:
@@ -173,3 +170,5 @@ Eval:
     drop_last: false
     batch_size_per_card: 1
     num_workers: 2
+
+profiler_options: null
