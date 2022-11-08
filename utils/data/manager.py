@@ -79,6 +79,10 @@ class DataManager(object):
             for index, box in enumerate(gt):
                 text = box['transcription']
                 points = box['points']
+                if '###' in text:
+                    continue
+                if not text.replace('#', ''):
+                    continue
                 cropped_name = self.generate_cropped_image_name(self.dataset_name, index, image_name)
                 available_boxes[cropped_name] = {
                     'transcription': text,
@@ -142,13 +146,12 @@ class ReCTSManager(DataManager):
 
             available_boxes = []
             for index, box in enumerate(boxes):
-                if box['ignore'] == 0:
-                    text = box['transcription']
-                    points = self.convert_points_format(box['points'])
-                    available_boxes.append({
-                        'transcription': text,
-                        'points': points
-                    })
+                text = box['transcription'] if box['ignore'] == 0 else '###'
+                points = self.convert_points_format(box['points'])
+                available_boxes.append({
+                    'transcription': text,
+                    'points': points
+                })
             ground_truths[image_path] = available_boxes
         return ground_truths
 
@@ -177,16 +180,16 @@ class LSVTManager(DataManager):
 
             available_boxes = []
             for box in gt:
-                if not box['illegibility']:
-                    text = box['transcription']
-                    points = box['points']
-                    if len(points) > 4:
-                        new_points = minimal_rectangle(points, ordered=True)
-                        points = new_points.tolist()
-                    available_boxes.append({
-                        'transcription': text,
-                        'points': points
-                    })
+                text = box['transcription'].replace('＃', '#') if not box['illegibility'] else '###'
+                points = box['points']
+                if len(points) > 4:
+                    new_points = minimal_rectangle(points, ordered=True)
+                    points = new_points.tolist()
+                available_boxes.append({
+                    'transcription': text,
+                    'points': points
+                })
+
             ground_truths[image_path] = available_boxes
 
         return ground_truths
@@ -228,19 +231,10 @@ class ShopSignManager(DataManager):
                 assert len(segs) == 9, "error format sample: {}".format(line)
 
                 text = segs[-1]
-                if text == '###':
-                    continue
-
-                unrecognizable = False
-                if '###' in text:
-                    unrecognizable = True
-                    text = text.replace('###', '').strip()
-
                 points = self.convert_points_format([int(p) for p in segs[:8]])
                 available_boxes.append({
                     'transcription': text,
                     'points': points,
-                    'unrecognizable': unrecognizable,
                 })
 
             ground_truths[image_path] = available_boxes
@@ -407,6 +401,8 @@ class CTWManager(DataManager):
                 if not box['ignore']:
                     text = box['transcription']
                     points = box['points']
+                    if '###' in text:
+                        continue
                     cropped_name = self.generate_cropped_image_name(self.dataset_name, index, image_name)
                     available_boxes[cropped_name] = {
                         'transcription': text,
