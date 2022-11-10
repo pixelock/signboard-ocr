@@ -4,7 +4,7 @@ Global:
   epoch_num: 500
   log_smooth_window: 20
   print_batch_step: 10
-  save_model_dir: ./output/det/ppocr/student/data1
+  save_model_dir: ./output/det/ppocr/student/d1
   save_epoch_step: 100
   eval_batch_step:
   - 0
@@ -12,10 +12,10 @@ Global:
   cal_metric_during_train: false
   pretrained_model: null
   checkpoints: null
-  save_inference_dir: null
+  save_inference_dir: ./output/det/ppocr/student/student/d1/inference
   use_visualdl: false
   infer_img:
-  save_res_path: ./output/det/ppocr/student/data1/predicts.txt
+  save_res_path: ./output/det/ppocr/student/student/d1/predicts.txt
   distributed: true
 
 Architecture:
@@ -58,9 +58,9 @@ Optimizer:
 PostProcess:
   name: DBPostProcess
   thresh: 0.3
-  box_thresh: 0.5
+  box_thresh: 0.4
   max_candidates: 1000
-  unclip_ratio: 1.5
+  unclip_ratio: 2.0
 
 Metric:
   name: DetMetric

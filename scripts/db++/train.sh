@@ -1,1 +1,1 @@
-python PaddleOCR/tools/train.py -c configs/det/db++/data1.yml  -o Global.pretrained_model="plm/db++/ResNet50_dcn_asf_synthtext_pretrained"
+python PaddleOCR/tools/train.py -c configs/det/db++/normal-d1.yml  -o Global.pretrained_model="plm/db++/ResNet50_dcn_asf_synthtext_pretrained"

@@ -374,7 +374,6 @@ class CTWManager(DataManager):
                 available_boxes.append({
                     'points': points,
                     'transcription': ''.join(sentence_chars),
-                    'ignore': False,
                 })
 
             ignores = gt['ignore']
@@ -382,32 +381,8 @@ class CTWManager(DataManager):
                 points = trans_integer(box['polygon'], width=width, height=height)
                 available_boxes.append({
                     'points': points,
-                    'transcription': '',
-                    'ignore': True,
+                    'transcription': '###',
                 })
-
-            ground_truths[image_path] = available_boxes
-
-        return ground_truths
-
-    def get_recognition_gts(self):
-        ground_truths = dict()
-
-        for image_path, gt in tqdm(self.det_gts.items()):
-            image_name = os.path.splitext(os.path.split(image_path)[1])[0]
-            available_boxes = dict()
-
-            for index, box in enumerate(gt):
-                if not box['ignore']:
-                    text = box['transcription']
-                    points = box['points']
-                    if '###' in text:
-                        continue
-                    cropped_name = self.generate_cropped_image_name(self.dataset_name, index, image_name)
-                    available_boxes[cropped_name] = {
-                        'transcription': text,
-                        'points': points,
-                    }
 
             ground_truths[image_path] = available_boxes
 

@@ -1,1 +1,1 @@
-python PaddleOCR/tools/train.py -c configs/det/ppocr/student.yml  -o Global.checkpoints="plm/ppocr/ch_PP-OCRv3_det_distill_train/student"
+python PaddleOCR/tools/train.py -c configs/det/ppocr/student-d1.yml -o Global.checkpoints="plm/ppocr/ch_PP-OCRv3_det_distill_train/student"
