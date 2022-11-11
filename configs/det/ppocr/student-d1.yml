@@ -1,7 +1,7 @@
 Global:
   debug: false
   use_gpu: true
-  epoch_num: 500
+  epoch_num: 60
   log_smooth_window: 20
   print_batch_step: 10
   save_model_dir: ./output/det/ppocr/student/d1
@@ -58,9 +58,9 @@ Optimizer:
 PostProcess:
   name: DBPostProcess
   thresh: 0.3
-  box_thresh: 0.4
+  box_thresh: 0.5
   max_candidates: 1000
-  unclip_ratio: 2.0
+  unclip_ratio: 1.5
 
 Metric:
   name: DetMetric

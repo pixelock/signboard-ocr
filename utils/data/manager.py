@@ -81,7 +81,9 @@ class DataManager(object):
                 points = box['points']
                 if '###' in text:
                     continue
-                if not text.replace('#', ''):
+                if not text.replace('#', '').strip():
+                    continue
+                if 'invalid' in box and box['invalid']:
                     continue
                 cropped_name = self.generate_cropped_image_name(self.dataset_name, index, image_name)
                 available_boxes[cropped_name] = {
@@ -196,9 +198,12 @@ class LSVTManager(DataManager):
 
 
 class ShopSignManager(DataManager):
-    def __init__(self, path):
+    def __init__(self, path, exclude_unrecognizable=False):
+        self.exclude_unrecog = exclude_unrecognizable
+        name = 'shopsign' if not self.exclude_unrecog else 'shopsign_ex_unrecog'
+
         super(ShopSignManager, self).__init__(
-            name='shopsign',
+            name=name,
             is_detection=True,
             is_recognition=True,
             is_scatter=True,
@@ -206,6 +211,7 @@ class ShopSignManager(DataManager):
 
         self.root_path = path
         self.anno_path = os.path.join(self.root_path, 'annotation')
+
         self.initialize()
 
     def get_detection_gts(self):
@@ -231,10 +237,19 @@ class ShopSignManager(DataManager):
                 assert len(segs) == 9, "error format sample: {}".format(line)
 
                 text = segs[-1]
+                invalid = False
+                if self.exclude_unrecog:
+                    if text == '###':
+                        continue
+                    if '###' in text:
+                        invalid = True
+                        text = text.replace('###', '').strip()
+
                 points = self.convert_points_format([int(p) for p in segs[:8]])
                 available_boxes.append({
                     'transcription': text,
                     'points': points,
+                    'invalid': invalid,
                 })
 
             ground_truths[image_path] = available_boxes

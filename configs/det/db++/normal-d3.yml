@@ -4,18 +4,18 @@ Global:
   epoch_num: 50
   log_smooth_window: 20
   print_batch_step: 10
-  save_model_dir: ./output/det/db++/normal/d1
+  save_model_dir: ./output/det/db++/normal/d3
   save_epoch_step: 5
   eval_batch_step:
   - 0
-  - 9486
+  - 7500
   cal_metric_during_train: false
   pretrained_model:
   checkpoints: null
-  save_inference_dir: ./output/det/db++/normal/d1/inference
+  save_inference_dir: ./output/det/db++/normal/d3/inference
   use_visualdl: false
   infer_img:
-  save_res_path: ./output/det/db++/normal/d1/predicts.txt
+  save_res_path: ./output/det/db++/normal/d3/predicts.txt
 
 Architecture:
   model_type: det
@@ -69,11 +69,7 @@ Train:
     data_dir: data/
     label_file_list:
       - ./data/det/lsvt.txt
-      - ./data/det/rects.txt
-      - ./data/det/ctw.txt
     ratio_list:
-      - 1.0
-      - 1.0
       - 1.0
     transforms:
     - DecodeImage:
@@ -130,7 +126,7 @@ Train:
   loader:
     shuffle: true
     drop_last: false
-    batch_size_per_card: 8
+    batch_size_per_card: 4
     num_workers: 8
 
 Eval:
