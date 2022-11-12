@@ -5,7 +5,7 @@ Global:
   log_smooth_window: 20
   print_batch_step: 10
   save_model_dir: ./output/det/db++/normal/d3
-  save_epoch_step: 5
+  save_epoch_step: 1
   eval_batch_step:
   - 0
   - 7500
