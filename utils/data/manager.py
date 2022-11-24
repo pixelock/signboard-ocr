@@ -430,10 +430,28 @@ class BaiduCHSTRManager(DataManager):
 
             image_path = os.path.abspath(os.path.join(self.image_train_path, image_name))
 
-            ground_truths[image_path] = text
+            ground_truths[image_path] = {
+                'text': text,
+                'width': width,
+                'height': height,
+            }
 
         return ground_truths
 
+    def recognition_output_paddle(self, output_dir, image_dir):
+        gts = self.rec_gts or self.get_recognition_gts()
+        lines = []
+        for path, box in tqdm(gts.items()):
+            text = box['text']
+            line = '{}\t{}'.format(path, text)
+            lines.append(line)
+
+        with open(output_dir, 'w', encoding='utf-8') as f:
+            f.write('\n'.join(lines))
+
+    def save_cropped_image(self, output_dir, v2h=True, v2h_threshold=1.5):
+        pass
+
 
 if __name__ == '__main__':
-    manager = CTWManager('../../data/CTW')
+    manager = BaiduCHSTRManager('../../data/Baidu-Chinese-Scene-Recog')

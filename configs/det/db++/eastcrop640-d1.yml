@@ -1,0 +1,174 @@
+Global:
+  debug: false
+  use_gpu: true
+  epoch_num: 50
+  log_smooth_window: 20
+  print_batch_step: 10
+  save_model_dir: ./output/det/db++/eastcrop640/d1
+  save_epoch_step: 1
+  eval_batch_step:
+  - 0
+  - 18972
+  cal_metric_during_train: false
+  pretrained_model:
+  checkpoints: null
+  save_inference_dir: ./output/det/db++/eastcrop640/d1/inference
+  use_visualdl: false
+  infer_img:
+  save_res_path: ./output/det/db++/eastcrop640/d1/predicts.txt
+
+Architecture:
+  model_type: det
+  algorithm: DB++
+  Transform: null
+  Backbone:
+    name: ResNet
+    layers: 50
+    dcn_stage: [False, True, True, True]
+  Neck:
+    name: DBFPN
+    out_channels: 256
+    use_asf: True
+  Head:
+    name: DBHead
+    k: 50
+
+Loss:
+  name: DBLoss
+  balance_loss: true
+  main_loss_type: BCELoss
+  alpha: 5
+  beta: 10
+  ohem_ratio: 3
+
+Optimizer:
+  name: Adam
+  beta1: 0.9
+  beta2: 0.999
+  lr:
+    name: DecayLearningRate
+    learning_rate: 0.0001
+    epochs: 50
+    factor: 0.9
+    end_lr: 0
+
+PostProcess:
+  name: DBPostProcess
+  thresh: 0.3
+  box_thresh: 0.5
+  max_candidates: 1000
+  unclip_ratio: 1.5
+
+Metric:
+  name: DetMetric
+  main_indicator: hmean
+
+Train:
+  dataset:
+    name: SimpleDataSet
+    data_dir: data/
+    label_file_list:
+      - ./data/det/lsvt.txt
+      - ./data/det/rects.txt
+      - ./data/det/ctw.txt
+    ratio_list:
+      - 1.0
+      - 1.0
+      - 1.0
+    transforms:
+    - DecodeImage:
+        img_mode: BGR
+        channel_first: false
+    - DetLabelEncode: null
+    - IaaAugment:
+        augmenter_args:
+        - type: Fliplr
+          args:
+            p: 0.5
+        - type: Affine
+          args:
+            rotate:
+            - -10
+            - 10
+        - type: Resize
+          args:
+            size:
+            - 0.5
+            - 3
+    - EastRandomCropData:
+        size:
+        - 640
+        - 640
+        max_tries: 10
+        keep_ratio: true
+    - MakeShrinkMap:
+        shrink_ratio: 0.4
+        min_text_size: 8
+    - MakeBorderMap:
+        shrink_ratio: 0.4
+        thresh_min: 0.3
+        thresh_max: 0.7
+    - NormalizeImage:
+        scale: 1./255.
+        mean:
+        - 0.48109378172549
+        - 0.45752457890196
+        - 0.40787054090196
+        std:
+        - 1.0
+        - 1.0
+        - 1.0
+        order: hwc
+    - ToCHWImage: null
+    - KeepKeys:
+        keep_keys:
+        - image
+        - threshold_map
+        - threshold_mask
+        - shrink_map
+        - shrink_mask
+  loader:
+    shuffle: true
+    drop_last: false
+    batch_size_per_card: 4
+    num_workers: 8
+
+Eval:
+  dataset:
+    name: SimpleDataSet
+    data_dir: data/
+    label_file_list:
+    - ./data/det/shopsign.txt
+    transforms:
+    - DecodeImage:
+        img_mode: BGR
+        channel_first: false
+    - DetLabelEncode: null
+    - DetResizeForTest:
+        limit_type: max
+        limit_side_len: 1024
+    - NormalizeImage:
+        scale: 1./255.
+        mean:
+        - 0.48109378172549
+        - 0.45752457890196
+        - 0.40787054090196
+        std:
+        - 1.0
+        - 1.0
+        - 1.0
+        order: hwc
+    - ToCHWImage: null
+    - KeepKeys:
+        keep_keys:
+        - image
+        - shape
+        - polys
+        - ignore_tags
+  loader:
+    shuffle: false
+    drop_last: false
+    batch_size_per_card: 1
+    num_workers: 2
+
+profiler_options: null
