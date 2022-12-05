@@ -35,3 +35,7 @@ def get_rotate_crop_image(img, points, v2h=True, v2h_threshold=1.5):
         dst_img = np.rot90(dst_img)
 
     return dst_img
+
+
+def rotate_image(img):
+    return np.rot90(img)

@@ -9,11 +9,13 @@
 import os
 import cv2
 import json
+import shutil
 import numpy as np
 import collections
 from tqdm import tqdm
 
-from utils.image import get_rotate_crop_image
+from utils.text import dbc2sbc
+from utils.image import get_rotate_crop_image, rotate_image
 from utils.bbox import minimal_rectangle, trans_xywh2corners, trans_integer
 
 
@@ -96,7 +98,10 @@ class DataManager(object):
         return ground_truths
 
     def generate_cropped_image_name(self, prefix, index, image_name=None, box_info=None):
-        return '{}_{}_{}.jpg'.format(prefix, image_name, index)
+        if index is None:
+            return '{}_{}.jpg'.format(prefix, image_name)
+        else:
+            return '{}_{}_{}.jpg'.format(prefix, image_name, index)
 
     def recognition_output_paddle(self, output_dir, image_dir):
         gts = self.rec_gts or self.get_recognition_gts()
@@ -405,7 +410,7 @@ class CTWManager(DataManager):
 
 
 class BaiduCHSTRManager(DataManager):
-    def __init__(self, path):
+    def __init__(self, path, tidy):
         super(BaiduCHSTRManager, self).__init__(
             name='baidu_ch_str',
             is_detection=False,
@@ -419,21 +424,36 @@ class BaiduCHSTRManager(DataManager):
         with open(os.path.join(self.root_path, 'train.list'), 'r', encoding='utf-8') as f:
             self.lines = f.read().split('\n')
 
+        self.tidy = tidy
+
         self.initialize()
 
     def get_recognition_gts(self):
         ground_truths = dict()
 
         for line in tqdm(self.lines):
+            if not line.strip():
+                continue
+
             width, height, image_name, text = line.split('\t')
             width, height = int(width), int(height)
 
             image_path = os.path.abspath(os.path.join(self.image_train_path, image_name))
 
+            text = dbc2sbc(text).strip()
+            if not text:
+                print('image {} contains no text'.format(image_path))
+                continue
+            if self.tidy and len(text) <= 1:
+                # print('exclude image {} with text [{}]'.format(image_path, text))
+                continue
+
+            new_image_name = self.generate_cropped_image_name(self.dataset_name, index=None, image_name=os.path.splitext(image_name)[0])
             ground_truths[image_path] = {
                 'text': text,
                 'width': width,
                 'height': height,
+                'image_name': new_image_name,
             }
 
         return ground_truths
@@ -442,15 +462,35 @@ class BaiduCHSTRManager(DataManager):
         gts = self.rec_gts or self.get_recognition_gts()
         lines = []
         for path, box in tqdm(gts.items()):
+            image_name = box['image_name']
+            new_image_path = os.path.join(image_dir, image_name)
             text = box['text']
-            line = '{}\t{}'.format(path, text)
+            line = '{}\t{}'.format(new_image_path, text)
             lines.append(line)
 
         with open(output_dir, 'w', encoding='utf-8') as f:
             f.write('\n'.join(lines))
 
     def save_cropped_image(self, output_dir, v2h=True, v2h_threshold=1.5):
-        pass
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+        gts = self.rec_gts
+
+        for raw_path, box in tqdm(gts.items()):
+            new_name = box['image_name']
+            new_path = os.path.join(output_dir, new_name)
+            text = box['text']
+
+            width, height = box['width'], box['height']
+            if len(text) > 1 and v2h and height / (width + 1e-12) > v2h_threshold:
+                # read and rotate raw image
+                img_data = cv2.imread(raw_path, cv2.IMREAD_COLOR)
+                new_data = rotate_image(img_data)
+                cv2.imwrite(new_path, new_data, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
+            else:
+                # copy raw image
+                shutil.copyfile(src=raw_path, dst=new_path)
 
 
 if __name__ == '__main__':
