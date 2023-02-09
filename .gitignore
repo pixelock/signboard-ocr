@@ -137,7 +137,8 @@ dmypy.json
 # Project
 /data
 /plm
-/results
+/results/draw
+/results/infer
 /logs
 /log
 /output

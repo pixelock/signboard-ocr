@@ -323,7 +323,11 @@ class BDCIPOIManager(DataManager):
 
 
 class CTWManager(DataManager):
-    def __init__(self, path):
+    def __init__(self, path, direction='all'):
+        """
+        :param path: folder path of CTW dataset
+        :param direction: filter images by camera angle. must be one of (`all`, `side`). default: all
+        """
         super(CTWManager, self).__init__(
             name='ctw',
             is_detection=True,
@@ -338,21 +342,35 @@ class CTWManager(DataManager):
         self.label_val_path = os.path.join(self.root_path, 'val.jsonl')
         self.label_test_path = os.path.join(self.root_path, 'test_cls.jsonl')
 
+        self.direction = direction
+
         self.train_gts = []
         self.val_gts = []
         self.test_gts = []
 
         with open(self.label_train_path, 'r', encoding='utf-8') as f:
             for line in f:
-                self.train_gts.append(json.loads(line))
+                sample = json.loads(line)
+                if self.filter_direction(sample):
+                    self.train_gts.append(sample)
         with open(self.label_val_path, 'r', encoding='utf-8') as f:
             for line in f:
-                self.val_gts.append(json.loads(line))
+                sample = json.loads(line)
+                if self.filter_direction(sample):
+                    self.val_gts.append(sample)
         with open(self.label_test_path, 'r', encoding='utf-8') as f:
             for line in f:
-                self.test_gts.append(json.loads(line))
+                sample = json.loads(line)
+                if self.filter_direction(sample):
+                    self.test_gts.append(sample)
 
         self.initialize()
+
+    def filter_direction(self, sample):
+        if self.direction == 'side':
+            file_name = sample['file_name']
+            return True if file_name.startswith('1') or file_name.startswith('3') else False
+        return True
 
     @staticmethod
     def poly2bbox(poly):
@@ -491,7 +509,3 @@ class BaiduCHSTRManager(DataManager):
             else:
                 # copy raw image
                 shutil.copyfile(src=raw_path, dst=new_path)
-
-
-if __name__ == '__main__':
-    manager = BaiduCHSTRManager('../../data/Baidu-Chinese-Scene-Recog')
