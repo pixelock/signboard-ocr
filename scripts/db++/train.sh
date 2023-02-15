@@ -15,5 +15,11 @@ python PaddleOCR/tools/train.py -c configs/det/db++/eastcrop640-d2.yml -o Global
 python PaddleOCR/tools/train.py -c configs/det/db++/eastcrop640-d3.yml -o Global.pretrained_model="plm/det/db++/ResNet50_dcn_asf_synthtext_pretrained"
 python PaddleOCR/tools/train.py -c configs/det/db++/eastcrop640-d3.yml -o Global.checkpoints="output/det/db++/eastcrop640/d3/latest"
 
+python PaddleOCR/tools/train.py -c configs/det/db++/eastcrop640-d4.yml -o Global.pretrained_model="plm/det/db++/ResNet50_dcn_asf_synthtext_pretrained"
+python PaddleOCR/tools/train.py -c configs/det/db++/eastcrop640-d4.yml -o Global.checkpoints="output/det/db++/eastcrop640/d4/latest"
+
+python PaddleOCR/tools/train.py -c configs/det/db++/eastcrop640-d6.yml -o Global.pretrained_model="plm/det/db++/ResNet50_dcn_asf_synthtext_pretrained"
+python PaddleOCR/tools/train.py -c configs/det/db++/eastcrop640-d6.yml -o Global.checkpoints="output/det/db++/eastcrop640/d6/latest"
+
 python PaddleOCR/tools/train.py -c configs/det/db++/eastcrop480-d2.yml -o Global.pretrained_model="plm/det/db++/ResNet50_dcn_asf_synthtext_pretrained"
 python PaddleOCR/tools/train.py -c configs/det/db++/eastcrop480-d2.yml -o Global.checkpoints="output/det/db++/eastcrop480/d2/latest"

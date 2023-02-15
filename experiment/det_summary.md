@@ -8,7 +8,8 @@
 | --- | --- | --- | --- |
 | ReCTS | 20000 | det/rects.txt ||
 | LSVT | 30000 | det/lsvt.txt ||
-| CTW | 25887 | det/ctw.txt | 将源文件中ignore部分的box也包括进来 |
+| CTW | 25887 | det/ctw.txt ||
+| CTW Side | 19361 | det/ctw-side.txt | 只去左右机位相机拍摄的图片, 排除前后相机拍摄的图片 |
 | ShopSign | 1265 | det/shopsign.txt ||
 
 ### 实验数据
@@ -18,6 +19,9 @@
 | d1 | ReCTS + LSVT + CTW | 75887 | ShopSign | 1265 |
 | d2 | ReCTS + LSVT | 50000 | ShopSign | 1265 |
 | d3 | LSVT | 30000 | ShopSign | 1265 |
+| d4 | ReCTS | 20000 | ShopSign | 1265 |
+| d5 | CTW | 25887 | ShopSign | 1265 |
+| d6 | CTW Side | 19361 | ShopSign | 1265 |
 
 ### PPOCR v3
 
