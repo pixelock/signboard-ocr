@@ -258,15 +258,17 @@ def train(config,
     reader_start = time.time()
     eta_meter = AverageMeter()
 
-    max_iter = len(train_dataloader) - 1 if platform.system(
-    ) == "Windows" else len(train_dataloader)
+    # max_iter = len(train_dataloader) - 1 if platform.system(
+    # ) == "Windows" else len(train_dataloader)
+    max_iter = len(train_dataloader)
 
     for epoch in range(start_epoch, epoch_num + 1):
         if train_dataloader.dataset.need_reset:
             train_dataloader = build_dataloader(
                 config, 'Train', device, logger, seed=epoch)
-            max_iter = len(train_dataloader) - 1 if platform.system(
-            ) == "Windows" else len(train_dataloader)
+            # max_iter = len(train_dataloader) - 1 if platform.system(
+            # ) == "Windows" else len(train_dataloader)
+            max_iter = len(train_dataloader)
 
         for idx, batch in enumerate(train_dataloader):
             profiler.add_profiler_step(profiler_options)

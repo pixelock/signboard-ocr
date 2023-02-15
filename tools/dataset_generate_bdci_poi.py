@@ -7,7 +7,12 @@
 """
 
 import os
+import sys
 import argparse
+
+__dir__ = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(__dir__)
+sys.path.insert(0, os.path.abspath(os.path.join(__dir__, '..')))
 
 from utils.data.manager import BDCIPOIManager
 from constant import PATH_DATA, PATH_DATA_DET, PATH_DATA_RECOG, PATH_DATA_RECOG_IMG
