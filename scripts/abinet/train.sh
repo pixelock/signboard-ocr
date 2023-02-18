@@ -1,0 +1,2 @@
+python PaddleOCR/tools/train.py -c configs/rec/abinet/r45-d1.yml -o Global.pretrained_model="plm/rec/rec_r45_abinet_train/abinet_vl_pretrained"
+python PaddleOCR/tools/train.py -c configs/rec/abinet/r45-d1.yml -o Global.checkpoints="output/det/db++/eastcrop640/d2/latest"
