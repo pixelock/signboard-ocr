@@ -7,7 +7,7 @@ Global:
   save_epoch_step: 1
   eval_batch_step:
     - 0
-    - 1134
+    - 1701
   cal_metric_during_train: False
   pretrained_model:
   checkpoints:
