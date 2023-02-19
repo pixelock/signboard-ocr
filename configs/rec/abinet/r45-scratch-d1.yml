@@ -7,7 +7,7 @@ Global:
   save_epoch_step: 1
   eval_batch_step:
     - 0
-    - 1134
+    - 1701
   cal_metric_during_train: False
   pretrained_model:
   checkpoints:
@@ -28,7 +28,7 @@ Optimizer:
   clip_norm: 20.0
   lr:
     name: Piecewise
-    decay_epochs: [10]
+    decay_epochs: [30]
     values: [0.0001, 0.00001] 
   regularizer:
     name: 'L2'

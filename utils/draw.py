@@ -7,9 +7,26 @@
 """
 
 import math
+import random
 from PIL import Image, ImageDraw, ImageFont
 
 from constant import PATH_FONT
+
+
+def draw_ocr_box(image, boxes, scores=None, drop_score=0.5):
+    img_left = image.copy()
+
+    random.seed(0)
+    draw_left = ImageDraw.Draw(img_left)
+    for idx, box in enumerate(boxes):
+        if scores is not None and scores[idx] < drop_score:
+            continue
+
+        color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        draw_left.polygon(box, fill=color)
+
+    img_left = Image.blend(image, img_left, 0.5)
+    return img_left
 
 
 def draw_ocr_box_text(image,
@@ -21,8 +38,6 @@ def draw_ocr_box_text(image,
     h, w = image.height, image.width
     img_left = image.copy()
     img_right = Image.new('RGB', (w, h), (255, 255, 255))
-
-    import random
 
     random.seed(0)
     draw_left = ImageDraw.Draw(img_left)

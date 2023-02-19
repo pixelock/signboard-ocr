@@ -25,7 +25,15 @@
 | d5 | Baidu CSR Tidy | 186479 | ShopSign | 9551 |
 | d6 | ReCTS + LSVT + CTW Side + Baidu CSR Tidy | 687497 | ShopSign | 9551 |
 
+### PPOCR v3
+
+| 实验方案名称 | 数据集 | acc | norm_edit_dis | 实验备注说明 |
+| --- | --- | --- | --- | --- |
+| official | ShopSign验证集 | 0.7376478032752873 | 0.8923871860791661 | 官方开源模型参数 |
+
 ### ABINET
 
-| 实验方案名称 | 数据集 | thresh | box_thresh | unclip_ratio | post.image_size | precision | recall | hmean |
-| --- | --- | --- | --- | --- |---| --- | --- | --- |
+| 实验方案名称 | 数据集 | acc | norm_edit_dis | 实验备注说明 |
+| --- | --- | --- | --- | --- |
+| r45 | d1 | 0.5358640933977935 | 0.7580993001232743 | 使用预训练模型[abinet_vl_pretrained](https://paddleocr.bj.bcebos.com/rec_r45_abinet_train.tar)为基础, 继续训练 |
+| r45-scratch | d1 | | | 不使用任何预训练模型, 从零开始训练 |
