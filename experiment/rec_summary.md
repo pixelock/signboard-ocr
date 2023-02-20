@@ -24,6 +24,7 @@
 | d4 | CTW Side | 149175 | ShopSign | 9551 |
 | d5 | Baidu CSR Tidy | 186479 | ShopSign | 9551 |
 | d6 | ReCTS + LSVT + CTW Side + Baidu CSR Tidy | 687497 | ShopSign | 9551 |
+| d7 | ReCTS + LSVT + CTW Side | 501018 | ShopSign | 9551 |
 
 ### PPOCR v3
 
