@@ -22,8 +22,6 @@ from .make_shrink_map import MakeShrinkMap
 from .random_crop_data import EastRandomCropData, RandomCropImgMask
 from .make_pse_gt import MakePseGt
 
-
-
 from .rec_img_aug import BaseDataAugmentation, RecAug, RecConAug, RecResizeImg, ClsResizeImg, \
     SRNRecResizeImg, GrayRecResizeImg, SARRecResizeImg, PRENResizeImg, \
     ABINetRecResizeImg, SVTRRecResizeImg, ABINetRecAug, VLRecResizeImg, SPINRecResizeImg, RobustScannerRecResizeImg, \
