@@ -47,6 +47,8 @@ from .fce_targets import FCENetTargets
 from .ct_process import *
 from .drrg_targets import DRRGTargets
 
+from .str_aug import STRAug
+
 
 def transform(data, ops=None):
     """ transform """
