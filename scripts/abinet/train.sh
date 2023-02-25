@@ -11,3 +11,5 @@ python PaddleOCR/tools/train.py -c configs/rec/abinet/r45-d7.yml -o Global.check
 # 使用Scene Text Recognition Data Augmentation, 做数据增强训练
 python PaddleOCR/tools/train.py -c configs/rec/abinet/r45-straug-d1.yml -o Global.pretrained_model="plm/rec/rec_r45_abinet_train/abinet_vl_pretrained"
 python PaddleOCR/tools/train.py -c configs/rec/abinet/r45-straug-d1.yml -o Global.checkpoints="output/rec/abinet/r45-straug/d1/latest"
+python PaddleOCR/tools/train.py -c configs/rec/abinet/r45-straug-d6.yml -o Global.pretrained_model="plm/rec/rec_r45_abinet_train/abinet_vl_pretrained"
+python PaddleOCR/tools/train.py -c configs/rec/abinet/r45-straug-d6.yml -o Global.checkpoints="output/rec/abinet/r45-straug/d6/latest"
