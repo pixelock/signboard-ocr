@@ -7,7 +7,7 @@ Global:
   save_epoch_step: 10
   eval_batch_step:
     - 0
-    - 5372
+    - 10743
   cal_metric_during_train: False
   pretrained_model:
   checkpoints:
@@ -84,7 +84,7 @@ Train:
           keep_keys: ['image', 'label', 'length']
   loader:
     shuffle: True
-    batch_size_per_card: 128
+    batch_size_per_card: 64
     drop_last: False
     num_workers: 4
 
